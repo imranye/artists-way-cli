@@ -4,22 +4,12 @@ import { program } from 'commander';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import readline from 'readline';
+import { prompt } from 'enquirer';
 import csv from 'csv-parser';
-
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: true
-});
 
 program
   .version('1.0.0')
   .description('My CLI App');
-
-const askQuestion = (question) => {
-  return new Promise((resolve) => rl.question(question, resolve));
-};
 
 const startMorningPages = async () => {
   let wordCount = 0;
@@ -27,36 +17,45 @@ const startMorningPages = async () => {
 
   console.log(chalk.blue('Start writing your morning pages. You need to write at least 750 words.'));
 
-  rl.on('line', (input) => {
-    const words = input.trim().split(/\s+/);
+  process.stdin.on('data', (input) => {
+    const words = input.toString().trim().split(/\s+/);
     wordCount += words.length;
-    content += input + '\n';
+    content += input.toString() + '\n';
 
     console.log(chalk.green(`Current word count: ${wordCount}`));
 
     if (wordCount >= 750) {
       console.log(chalk.yellow('You have reached 750 words. Do you want to save and exit? (yes/no)'));
-      rl.question('', (answer) => {
-        if (answer.toLowerCase() === 'yes') {
-          rl.close();
+      process.stdin.once('data', (answer) => {
+        if (answer.toString().trim().toLowerCase() === 'yes') {
+          process.stdin.pause();
+          const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+          const filename = `morning-pages-${timestamp}.txt`;
+          const filePath = path.join(process.cwd(), filename);
+
+          fs.writeFileSync(filePath, content);
+          console.log(chalk.green(`Morning pages saved to ${filePath}`));
         }
       });
     }
   });
-
-  rl.on('close', () => {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `morning-pages-${timestamp}.txt`;
-    const filePath = path.join(process.cwd(), filename);
-
-    fs.writeFileSync(filePath, content);
-    console.log(chalk.green(`Morning pages saved to ${filePath}`));
-  });
 };
 
 const startExercise = async () => {
-  const week = await askQuestion('Which week do you want to start from? (default: 1) ') || '1';
-  const random = await askQuestion('Do you want to do a random exercise? (yes/no) ') === 'yes';
+  const { week, random } = await prompt([
+    {
+      type: 'input',
+      name: 'week',
+      message: 'Which week do you want to start from? (default: 1)',
+      initial: '1'
+    },
+    {
+      type: 'confirm',
+      name: 'random',
+      message: 'Do you want to do a random exercise?',
+      initial: false
+    }
+  ]);
 
   const exercises = [];
   fs.createReadStream('data.csv')
@@ -85,36 +84,41 @@ const startExercise = async () => {
       console.log(chalk.blue(exercise.Description));
       console.log(chalk.blue('Start writing your response. You need to write at least 250 words.'));
 
-      rl.on('line', (input) => {
-        const words = input.trim().split(/\s+/);
+      process.stdin.on('data', (input) => {
+        const words = input.toString().trim().split(/\s+/);
         wordCount += words.length;
-        content += input + '\n';
+        content += input.toString() + '\n';
 
         console.log(chalk.green(`Current word count: ${wordCount}`));
 
         if (wordCount >= 250) {
           console.log(chalk.yellow('You have reached 250 words. Do you want to save and exit? (yes/no)'));
-          rl.question('', (answer) => {
-            if (answer.toLowerCase() === 'yes') {
-              rl.close();
+          process.stdin.once('data', (answer) => {
+            if (answer.toString().trim().toLowerCase() === 'yes') {
+              process.stdin.pause();
+              const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+              const filename = `exercise-${exercise.id}-${timestamp}.txt`;
+              const filePath = path.join(process.cwd(), filename);
+
+              fs.writeFileSync(filePath, content);
+              console.log(chalk.green(`Exercise response saved to ${filePath}`));
             }
           });
         }
-      });
-
-      rl.on('close', () => {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `exercise-${exercise.id}-${timestamp}.txt`;
-        const filePath = path.join(process.cwd(), filename);
-
-        fs.writeFileSync(filePath, content);
-        console.log(chalk.green(`Exercise response saved to ${filePath}`));
       });
     });
 };
 
 const main = async () => {
-  const choice = await askQuestion('What do you want to do? (1: Morning Pages, 2: Exercise) ');
+  const { choice } = await prompt({
+    type: 'select',
+    name: 'choice',
+    message: 'What do you want to do?',
+    choices: [
+      { name: '1', message: 'Morning Pages' },
+      { name: '2', message: 'Exercise' }
+    ]
+  });
 
   if (choice === '1') {
     await startMorningPages();
@@ -122,7 +126,6 @@ const main = async () => {
     await startExercise();
   } else {
     console.log(chalk.red('Invalid choice.'));
-    rl.close();
   }
 };
 
