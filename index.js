@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-const { program } = require('commander');
-const chalk = require('chalk');
+import { program } from 'commander';
+import chalk from 'chalk';
 
 program
   .version('1.0.0')
