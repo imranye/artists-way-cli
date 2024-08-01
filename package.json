@@ -2,15 +2,23 @@
   "name": "artists-way-cli",
   "version": "1.0.0",
   "main": "index.js",
+  "bin": {
+    "artists-way-cli": "./index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cli",
+    "artists",
+    "way"
+  ],
+  "author": "Imran Muthuvappa",
   "license": "ISC",
-  "description": "",
+  "description": "A CLI tool for the Artist's Way",
   "dependencies": {
     "chalk": "^5.3.0",
     "commander": "^12.1.0"
-  }
+  },
+  "type": "module" 
 }
