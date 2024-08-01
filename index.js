@@ -4,8 +4,10 @@ import { program } from 'commander';
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import { prompt } from 'enquirer';
+import pkg from 'enquirer';
 import csv from 'csv-parser';
+
+const { prompt } = pkg;
 
 program
   .version('1.0.0')
@@ -16,6 +18,9 @@ const startMorningPages = async () => {
   let content = '';
 
   console.log(chalk.blue('Start writing your morning pages. You need to write at least 750 words.'));
+
+  process.stdin.resume();
+  process.stdin.setEncoding('utf8');
 
   process.stdin.on('data', (input) => {
     const words = input.toString().trim().split(/\s+/);
@@ -35,6 +40,8 @@ const startMorningPages = async () => {
 
           fs.writeFileSync(filePath, content);
           console.log(chalk.green(`Morning pages saved to ${filePath}`));
+        } else {
+          console.log(chalk.blue('Continue writing...'));
         }
       });
     }
@@ -84,6 +91,9 @@ const startExercise = async () => {
       console.log(chalk.blue(exercise.Description));
       console.log(chalk.blue('Start writing your response. You need to write at least 250 words.'));
 
+      process.stdin.resume();
+      process.stdin.setEncoding('utf8');
+
       process.stdin.on('data', (input) => {
         const words = input.toString().trim().split(/\s+/);
         wordCount += words.length;
@@ -102,6 +112,8 @@ const startExercise = async () => {
 
               fs.writeFileSync(filePath, content);
               console.log(chalk.green(`Exercise response saved to ${filePath}`));
+            } else {
+              console.log(chalk.blue('Continue writing...'));
             }
           });
         }
