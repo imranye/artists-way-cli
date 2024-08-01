@@ -18,7 +18,8 @@
   "description": "A CLI tool for the Artist's Way",
   "dependencies": {
     "chalk": "^5.3.0",
-    "commander": "^12.1.0"
+    "commander": "^12.1.0",
+    "csv-parser": "^3.0.0"
   },
-  "type": "module" 
+  "type": "module"
 }
